@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operation Vineyard | Central Command Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            vine: {
+              900: '#1a0f00',
+              800: '#2d1a00',
+              700: '#422600',
+              600: '#5c3500',
+              500: '#7a4800',
+              400: '#9a5f00',
+              300: '#c27a08',
+              200: '#e8a828',
+              100: '#f5d88a',
+              50: '#fdf6e3',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #0c0a09;
+      color: #e7e5e4;
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1c1917; }
+    ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 4px rgba(202, 138, 4, 0.3); }
+      50% { box-shadow: 0 0 12px rgba(202, 138, 4, 0.6); }
+    }
+    .pulse-live { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    .scanline::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(202,138,4,0.1), transparent);
+      animation: scanline 8s linear infinite;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .glass {
+      background: rgba(28, 25, 23, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(87, 83, 78, 0.3);
+    }
+    .skill-badge { transition: all 0.2s ease; }
+    .skill-badge:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    // ═══════════════════════════════════════════════════════════════
+    // DATA LAYER — Update these values to refresh the dashboard
+    // ═══════════════════════════════════════════════════════════════
+    const DASHBOARD_DATA = {
+      meta: {
+        projectName: "OPERATION VINEYARD",
+        codename: "VINEYARD",
+        version: "2.0.0",
+        loopIteration: 47,
+        lastUpdated: new Date().toISOString(),
+      },
+      agents: {
+        total: 300,
+        active: 287,
+        idle: 13,
+        teams: 30,
+        avgUptime: "99.7%",
+      },
+      phases: [
+        { id: 1, name: "Infrastructure & Tooling", status: "complete", progress: 100, tasks: "45/45", description: "CI/CD, hosting, monitoring, base templates" },
+        { id: 2, name: "Core Framework Build", status: "complete", progress: 100, tasks: "62/62", description: "Agent swarm architecture, messaging, orchestration" },
+        { id: 3, name: "Agent Specialization", status: "complete", progress: 100, tasks: "88/88", description: "Role definitions, skill trees, prompt engineering" },
+        { id: 4, name: "Content Production", status: "in-progress", progress: 78, tasks: "156/200", description: "Blogs, books, designs, videos, audio generation" },
+        { id: 5, name: "Website Deployment", status: "in-progress", progress: 65, tasks: "89/137", description: "Multi-domain static site generation & deployment" },
+        { id: 6, name: "Cross-Agent Integration", status: "in-progress", progress: 42, tasks: "34/81", description: "Inter-agent workflows, handoffs, quality gates" },
+        { id: 7, name: "Autonomous Optimization", status: "pending", progress: 12, tasks: "8/67", description: "Self-healing, self-improving agent loops" },
+      ],
+      currentPhase: 5,
+      websites: {
+        deployed: 89,
+        target: 137,
+        today: 12,
+        domains: ["vineyard-network.com", "agent-tools.io", "swarm-docs.dev"],
+      },
+      content: {
+        blogPosts: 234,
+        books: 18,
+        canvaDesigns: 567,
+        documents: 1204,
+        videos: 45,
+        audioFiles: 128,
+      },
+      system: {
+        cpu: 72,
+        memory: 68,
+        storage: 45,
+        network: 91,
+        uptime: "14d 7h 23m",
+        status: "operational",
+      },
+      deliverables: [
+        { id: 1, title: "E-commerce Dashboard v2", type: "website", status: "complete", agent: "Agent-042", time: "2 min ago" },
+        { id: 2, title: "React Component Library", type: "code", status: "complete", agent: "Agent-117", time: "5 min ago" },
+        { id: 3, title: "Brand Guidelines Book", type: "design", status: "complete", agent: "Agent-089", time: "8 min ago" },
+        { id: 4, title: "API Documentation Site", type: "website", status: "in-progress", agent: "Agent-203", time: "12 min ago" },
+        { id: 5, title: "Marketing Landing Page", type: "website", status: "complete", agent: "Agent-156", time: "15 min ago" },
+        { id: 6, title: "Data Visualization Dashboard", type: "website", status: "in-progress", agent: "Agent-078", time: "18 min ago" },
+        { id: 7, title: "Mobile App Prototype", type: "design", status: "complete", agent: "Agent-267", time: "22 min ago" },
+        { id: 8, title: "Technical Blog: Agent Swarm Patterns", type: "blog", status: "complete", agent: "Agent-134", time: "25 min ago" },
+        { id: 9, title: "Portfolio Website Template", type: "website", status: "complete", agent: "Agent-198", time: "28 min ago" },
+        { id: 10, title: "Audio Narration: Introduction", type: "audio", status: "complete", agent: "Agent-045", time: "31 min ago" },
+        { id: 11, title: "SaaS Pricing Page", type: "website", status: "in-progress", agent: "Agent-221", time: "34 min ago" },
+        { id: 12, title: "Open Graph Image Generator", type: "tool", status: "complete", agent: "Agent-076", time: "38 min ago" },
+      ],
+      skills: [
+        { name: "React", level: "complete" }, { name: "TypeScript", level: "complete" }, { name: "Tailwind CSS", level: "complete" }, { name: "Next.js", level: "complete" }, { name: "Node.js", level: "complete" },
+        { name: "Python", level: "complete" }, { name: "FastAPI", level: "complete" }, { name: "PostgreSQL", level: "complete" }, { name: "Redis", level: "complete" }, { name: "Docker", level: "complete" },
+        { name: "Kubernetes", level: "in-progress" }, { name: "GraphQL", level: "complete" }, { name: "REST API Design", level: "complete" }, { name: "WebSockets", level: "complete" }, { name: "Microservices", level: "in-progress" },
+        { name: "CI/CD Pipelines", level: "complete" }, { name: "GitHub Actions", level: "complete" }, { name: "AWS Lambda", level: "complete" }, { name: "S3/Cloud Storage", level: "complete" }, { name: "CloudFront CDN", level: "complete" },
+        { name: "Vercel Deploy", level: "complete" }, { name: "Netlify Hosting", level: "complete" }, { name: "Domain Management", level: "complete" }, { name: "SSL/TLS Setup", level: "complete" }, { name: "NGINX Config", level: "complete" },
+        { name: "Monitoring", level: "in-progress" }, { name: "Log Aggregation", level: "complete" }, { name: "Alerting", level: "in-progress" }, { name: "Error Tracking", level: "complete" }, { name: "Analytics", level: "complete" },
+        { name: "UI Design", level: "complete" }, { name: "UX Research", level: "in-progress" }, { name: "Figma", level: "complete" }, { name: "Canva Pro", level: "complete" }, { name: "Adobe Creative Suite", level: "pending" },
+        { name: "Design Systems", level: "complete" }, { name: "Component Libraries", level: "complete" }, { name: "Accessibility (a11y)", level: "in-progress" }, { name: "Responsive Design", level: "complete" }, { name: "Animation/CSS", level: "complete" },
+        { name: "Framer Motion", level: "complete" }, { name: "Three.js/WebGL", level: "in-progress" }, { name: "SVG Graphics", level: "complete" }, { name: "Canvas API", level: "complete" }, { name: "D3.js", level: "in-progress" },
+        { name: "Markdown Processing", level: "complete" }, { name: "MDX", level: "complete" }, { name: "Content Management", level: "complete" }, { name: "SEO Optimization", level: "complete" }, { name: "Open Graph", level: "complete" },
+        { name: "Social Media Images", level: "complete" }, { name: "Video Editing", level: "in-progress" }, { name: "Audio Generation", level: "complete" }, { name: "Text-to-Speech", level: "complete" }, { name: "Speech-to-Text", level: "pending" },
+        { name: "Image Generation", level: "complete" }, { name: "Image Optimization", level: "complete" }, { name: "Lazy Loading", level: "complete" }, { name: "Code Splitting", level: "complete" }, { name: "PWA", level: "pending" },
+        { name: "Service Workers", level: "pending" }, { name: "Web Push", level: "pending" }, { name: "Payment Integration", level: "pending" }, { name: "Auth Systems", level: "complete" }, { name: "JWT/OAuth", level: "complete" },
+        { name: "Rate Limiting", level: "complete" }, { name: "Caching Strategies", level: "complete" }, { name: "Database Design", level: "complete" }, { name: "ORM/Prisma", level: "complete" }, { name: "Migrations", level: "complete" },
+        { name: "Testing (Jest)", level: "complete" }, { name: "E2E Testing", level: "in-progress" }, { name: "Load Testing", level: "pending" }, { name: "Security Auditing", level: "in-progress" }, { name: "Dependency Mgmt", level: "complete" },
+        { name: "Documentation", level: "complete" }, { name: "Technical Writing", level: "complete" }, { name: "API Documentation", level: "complete" }, { name: "Code Comments", level: "complete" }, { name: "README Generation", level: "complete" },
+        { name: "Git Workflow", level: "complete" }, { name: "Branch Strategy", level: "complete" }, { name: "Code Reviews", level: "complete" }, { name: "Linting/Formatting", level: "complete" }, { name: "Type Safety", level: "complete" },
+        { name: "Error Handling", level: "complete" }, { name: "Logging", level: "complete" }, { name: "Debugging", level: "complete" }, { name: "Performance Opt.", level: "in-progress" }, { name: "Bundle Analysis", level: "complete" },
+        { name: "SEO Meta Tags", level: "complete" }, { name: "Sitemap Gen", level: "complete" }, { name: "Robots.txt", level: "complete" }, { name: "Structured Data", level: "in-progress" }, { name: "i18n/L10n", level: "pending" },
+        { name: "Dark Mode", level: "complete" }, { name: "Theme Switching", level: "complete" }, { name: "Form Handling", level: "complete" }, { name: "Validation", level: "complete" }, { name: "State Management", level: "complete" },
+        { name: "Zustand/Redux", level: "complete" }, { name: "React Query", level: "complete" }, { name: "Server Components", level: "in-progress" }, { name: "Streaming SSR", level: "pending" }, { name: "Edge Functions", level: "in-progress" },
+      ],
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY COMPONENTS
+    // ═══════════════════════════════════════════════════════════════
+
+    const StatusDot = ({ status, size = "sm" }) => {
+      const colors = {
+        complete: "bg-emerald-500",
+        "in-progress": "bg-amber-500",
+        pending: "bg-stone-600",
+        operational: "bg-emerald-500",
+        degraded: "bg-amber-500",
+        critical: "bg-red-500",
+      };
+      const sizeClass = size === "lg" ? "w-3 h-3" : "w-2 h-2";
+      return (
+        <span className={`${sizeClass} rounded-full ${colors[status] || colors.pending} inline-block`} />
+      );
+    };
+
+    const ProgressBar = ({ progress, color = "bg-amber-600" }) => (
+      <div className="w-full bg-stone-800 rounded-full h-2.5 overflow-hidden">
+        <div
+          className={`${color} h-2.5 rounded-full transition-all duration-700 ease-out`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    );
+
+    const Card = ({ children, className = "", title, icon }) => (
+      <div className={`glass rounded-xl p-5 ${className}`}>
+        {(title || icon) && (
+          <div className="flex items-center gap-2 mb-4 text-stone-400 text-sm font-medium uppercase tracking-wider">
+            {icon && <span>{icon}</span>}
+            {title && <span>{title}</span>}
+          </div>
+        )}
+        {children}
+      </div>
+    );
+
+    const Badge = ({ children, type }) => {
+      const styles = {
+        complete: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        "in-progress": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        pending: "bg-stone-500/10 text-stone-400 border-stone-500/20",
+        website: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+        code: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+        design: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+        blog: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+        audio: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+        tool: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+      };
+      return (
+        <span className={`text-xs px-2 py-0.5 rounded-full border ${styles[type] || styles.pending} font-medium`}>
+          {children}
+        </span>
+      );
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // SECTION COMPONENTS
+    // ═══════════════════════════════════════════════════════════════
+
+    const Header = ({ data }) => (
+      <header className="border-b border-stone-800 bg-stone-950/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-800 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-amber-900/30">
+                V
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-stone-950 pulse-live" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                {data.meta.projectName}
+              </h1>
+              <p className="text-xs text-stone-500 font-mono">
+                LOOP #{data.meta.loopIteration} | {data.agents.active} AGENTS ACTIVE
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-stone-900 rounded-lg border border-stone-800">
+              <StatusDot status="operational" />
+              <span className="text-xs text-stone-400 font-medium">SYSTEM OPERATIONAL</span>
+            </div>
+            <div className="text-right hidden md:block">
+              <div className="text-xs text-stone-500 font-mono">
+                {new Date(data.meta.lastUpdated).toLocaleTimeString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+
+    const StatCard = ({ label, value, sub, icon, accent }) => (
+      <Card className="relative overflow-hidden group hover:border-stone-700 transition-all">
+        <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${accent} opacity-5 rounded-bl-full group-hover:opacity-10 transition-opacity`} />
+        <div className="flex items-start justify-between mb-3">
+          <span className="text-stone-500 text-xs font-medium uppercase tracking-wider">{label}</span>
+          <span className="text-lg">{icon}</span>
+        </div>
+        <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{value}</div>
+        {sub && <div className="text-xs text-stone-500 font-mono">{sub}</div>}
+      </Card>
+    );
+
+    const AgentOverview = ({ data }) => (
+      <Card title="Agent Swarm" icon="🤖" className="md:col-span-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          <div className="text-center p-3 bg-stone-900/50 rounded-lg">
+            <div className="text-2xl font-bold text-white">{data.agents.total}</div>
+            <div className="text-xs text-stone-500 uppercase tracking-wider">Total Agents</div>
+          </div>
+          <div className="text-center p-3 bg-emerald-950/30 rounded-lg border border-emerald-900/30">
+            <div className="text-2xl font-bold text-emerald-400">{data.agents.active}</div>
+            <div className="text-xs text-emerald-600 uppercase tracking-wider">Active</div>
+          </div>
+          <div className="text-center p-3 bg-amber-950/30 rounded-lg border border-amber-900/30">
+            <div className="text-2xl font-bold text-amber-400">{data.agents.idle}</div>
+            <div className="text-xs text-amber-600 uppercase tracking-wider">Idle</div>
+          </div>
+          <div className="text-center p-3 bg-stone-900/50 rounded-lg">
+            <div className="text-2xl font-bold text-white">{data.agents.teams}</div>
+            <div className="text-xs text-stone-500 uppercase tracking-wider">Teams</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-stone-500">
+          <span className="font-mono">Avg Uptime: {data.agents.avgUptime}</span>
+          <span className="mx-2">|</span>
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-live" />
+            Swarm Healthy
+          </span>
+        </div>
+      </Card>
+    );
+
+    const PhaseTracker = ({ phases, currentPhase }) => (
+      <Card title="Phase Tracker" icon="📊" className="md:col-span-2 lg:col-span-3">
+        <div className="space-y-3">
+          {phases.map((phase) => {
+            const isCurrent = phase.id === currentPhase;
+            const statusColors = {
+              complete: { bar: "bg-emerald-600", text: "text-emerald-400" },
+              "in-progress": { bar: "bg-amber-600", text: "text-amber-400" },
+              pending: { bar: "bg-stone-600", text: "text-stone-500" },
+            };
+            const colors = statusColors[phase.status];
+            return (
+              <div key={phase.id} className={`p-3 rounded-lg border ${isCurrent ? 'border-amber-700/50 bg-amber-950/10' : 'border-stone-800/50 bg-stone-900/30'} transition-all`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-bold ${colors.text} font-mono w-6`}>P{phase.id}</span>
+                    <span className={`text-sm font-semibold ${isCurrent ? 'text-white' : 'text-stone-300'}`}>{phase.name}</span>
+                    {isCurrent && <Badge type="in-progress">CURRENT</Badge>}
+                    {phase.status === "complete" && <Badge type="complete">DONE</Badge>}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-stone-500 font-mono">{phase.tasks}</span>
+                    <span className={`text-sm font-bold ${colors.text}`}>{phase.progress}%</span>
+                  </div>
+                </div>
+                <ProgressBar progress={phase.progress} color={colors.bar} />
+                <p className="text-xs text-stone-500 mt-1.5">{phase.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    );
+
+    const SkillsMatrix = ({ skills }) => {
+      const [filter, setFilter] = React.useState("all");
+      const levels = { complete: 0, "in-progress": 0, pending: 0 };
+      skills.forEach(s => levels[s.level]++);
+
+      const filtered = filter === "all" ? skills : skills.filter(s => s.level === filter);
+      const levelColors = {
+        complete: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25 hover:border-emerald-400/50",
+        "in-progress": "bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25 hover:border-amber-400/50",
+        pending: "bg-stone-500/10 text-stone-500 border-stone-600/30 hover:bg-stone-500/20",
+      };
+
+      return (
+        <Card title="Skills Matrix" icon="🎯" className="lg:col-span-3">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <button onClick={() => setFilter("all")} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filter === "all" ? 'bg-amber-600/20 border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-500'}`}>
+              All ({skills.length})
+            </button>
+            <button onClick={() => setFilter("complete")} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filter === "complete" ? 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400' : 'border-stone-700 text-stone-400 hover:border-stone-500'}`}>
+              Complete ({levels.complete})
+            </button>
+            <button onClick={() => setFilter("in-progress")} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filter === "in-progress" ? 'bg-amber-600/20 border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-500'}`}>
+              In Progress ({levels["in-progress"]})
+            </button>
+            <button onClick={() => setFilter("pending")} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filter === "pending" ? 'bg-stone-600/30 border-stone-500/50 text-stone-300' : 'border-stone-700 text-stone-400 hover:border-stone-500'}`}>
+              Pending ({levels.pending})
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[400px] overflow-y-auto pr-1">
+            {filtered.map((skill, i) => (
+              <div
+                key={i}
+                className={`skill-badge flex items-center justify-between px-3 py-2 rounded-lg border text-xs cursor-default ${levelColors[skill.level]}`}
+              >
+                <span className="font-medium truncate mr-2">{skill.name}</span>
+                <StatusDot status={skill.level} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      );
+    };
+
+    const DeliverablesFeed = ({ deliverables }) => {
+      const typeIcons = {
+        website: "🌐", code: "💻", design: "🎨", blog: "📝", audio: "🔊", tool: "🔧",
+      };
+      return (
+        <Card title="Live Deliverables" icon="📦" className="md:col-span-2">
+          <div className="space-y-0 max-h-[420px] overflow-y-auto pr-1">
+            {deliverables.map((d) => (
+              <div key={d.id} className="flex items-center gap-3 py-2.5 border-b border-stone-800/50 last:border-0 hover:bg-stone-800/20 px-2 -mx-2 rounded transition-colors">
+                <span className="text-base w-6 text-center flex-shrink-0">{typeIcons[d.type]}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-stone-200 truncate font-medium">{d.title}</div>
+                  <div className="text-xs text-stone-600 font-mono">{d.agent} • {d.time}</div>
+                </div>
+                <Badge type={d.type}>{d.type}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      );
+    };
+
+    const ContentStats = ({ content }) => (
+      <Card title="Content Production" icon="📝" className="md:col-span-2">
+        <div className="space-y-3">
+          {[
+            { label: "Blog Posts", value: content.blogPosts, icon: "📝", color: "from-teal-600 to-teal-800" },
+            { label: "Books Published", value: content.books, icon: "📚", color: "from-violet-600 to-violet-800" },
+            { label: "Canva Designs", value: content.canvaDesigns, icon: "🎨", color: "from-pink-600 to-pink-800" },
+            { label: "Documents", value: content.documents, icon: "📄", color: "from-sky-600 to-sky-800" },
+            { label: "Videos", value: content.videos, icon: "🎬", color: "from-rose-600 to-rose-800" },
+            { label: "Audio Files", value: content.audioFiles, icon: "🔊", color: "from-orange-600 to-orange-800" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-3">
+              <span className="text-base w-6 text-center flex-shrink-0">{item.icon}</span>
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-stone-400">{item.label}</span>
+                  <span className="text-xs font-bold text-white font-mono">{item.value.toLocaleString()}</span>
+                </div>
+                <div className="w-full bg-stone-800 rounded-full h-1.5">
+                  <div className={`h-1.5 rounded-full bg-gradient-to-r ${item.color}`} style={{ width: `${Math.min(100, (item.value / 1500) * 100)}%` }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+
+    const WebsiteCounter = ({ websites }) => (
+      <Card title="Website Deployment" icon="🌐" className="md:col-span-1">
+        <div className="text-center mb-4">
+          <div className="text-4xl font-black text-white font-mono">{websites.deployed}</div>
+          <div className="text-xs text-stone-500 uppercase tracking-wider mt-1">Deployed</div>
+        </div>
+        <div className="mb-3">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-stone-500">Progress</span>
+            <span className="text-amber-400 font-mono">{Math.round((websites.deployed / websites.target) * 100)}%</span>
+          </div>
+          <ProgressBar progress={(websites.deployed / websites.target) * 100} color="bg-sky-600" />
+        </div>
+        <div className="flex items-center justify-between text-xs text-stone-500">
+          <span>Target: <span className="text-stone-300 font-mono">{websites.target}</span></span>
+          <span className="text-emerald-400">+{websites.today} today</span>
+        </div>
+        <div className="mt-3 pt-3 border-t border-stone-800">
+          <div className="text-xs text-stone-500 mb-2">Recent Domains</div>
+          <div className="space-y-1">
+            {websites.domains.map((d, i) => (
+              <div key={i} className="text-xs text-stone-400 font-mono flex items-center gap-2">
+                <StatusDot status="complete" />
+                {d}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+
+    const SystemStatus = ({ system }) => {
+      const metrics = [
+        { label: "CPU", value: system.cpu, color: system.cpu > 85 ? "bg-red-600" : system.cpu > 70 ? "bg-amber-600" : "bg-emerald-600" },
+        { label: "Memory", value: system.memory, color: system.memory > 85 ? "bg-red-600" : system.memory > 70 ? "bg-amber-600" : "bg-emerald-600" },
+        { label: "Storage", value: system.storage, color: "bg-sky-600" },
+        { label: "Network", value: system.network, color: "bg-violet-600" },
+      ];
+      return (
+        <Card title="System Status" icon="⚡" className="md:col-span-1">
+          <div className="space-y-3">
+            {metrics.map((m) => (
+              <div key={m.label}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-stone-400">{m.label}</span>
+                  <span className="text-white font-mono">{m.value}%</span>
+                </div>
+                <ProgressBar progress={m.value} color={m.color} />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-3 border-t border-stone-800 space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-stone-500">Uptime</span>
+              <span className="text-emerald-400 font-mono">{system.uptime}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-stone-500">Status</span>
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <StatusDot status="operational" /> OPERATIONAL
+              </span>
+            </div>
+          </div>
+        </Card>
+      );
+    };
+
+    const CurrentPhaseBanner = ({ phase, iteration }) => (
+      <div className="bg-gradient-to-r from-amber-950/40 via-stone-900/60 to-stone-900/40 border border-amber-800/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-600/20 rounded-lg flex items-center justify-center text-xl border border-amber-600/30">
+            🚀
+          </div>
+          <div>
+            <div className="text-xs text-amber-500 uppercase tracking-wider font-medium">Current Phase</div>
+            <div className="text-sm font-bold text-white">{phase.name} — {phase.description}</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <div className="text-center">
+            <div className="text-amber-400 font-bold font-mono text-lg">{phase.progress}%</div>
+            <div className="text-stone-500">Complete</div>
+          </div>
+          <div className="w-px h-8 bg-stone-700" />
+          <div className="text-center">
+            <div className="text-white font-bold font-mono text-lg">#{iteration}</div>
+            <div className="text-stone-500">Loop Iteration</div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ═══════════════════════════════════════════════════════════════
+    // MAIN DASHBOARD
+    // ═══════════════════════════════════════════════════════════════
+
+    const Dashboard = () => {
+      const { agents, phases, currentPhase, websites, content, system, deliverables, skills, meta } = DASHBOARD_DATA;
+      const currentPhaseData = phases.find(p => p.id === currentPhase);
+
+      return (
+        <div className="min-h-screen bg-stone-950 scanline">
+          <Header data={DASHBOARD_DATA} />
+
+          <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+            {/* Current Phase Banner */}
+            <CurrentPhaseBanner phase={currentPhaseData} iteration={meta.loopIteration} />
+
+            {/* Top Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard label="Total Agents" value={agents.total} sub={`${agents.teams} teams`} icon="🤖" accent="from-amber-600 to-amber-800" />
+              <StatCard label="Websites Live" value={websites.deployed} sub={`+${websites.today} today`} icon="🌐" accent="from-sky-600 to-sky-800" />
+              <StatCard label="Content Pieces" value={(content.blogPosts + content.books + content.canvaDesigns + content.documents).toLocaleString()} sub="blogs + designs + docs" icon="📦" accent="from-emerald-600 to-emerald-800" />
+              <StatCard label="Skills Acquired" value={`${skills.filter(s => s.level === "complete").length}/${skills.length}`} sub={`${skills.filter(s => s.level === "in-progress").length} in progress`} icon="🎯" accent="from-violet-600 to-violet-800" />
+            </div>
+
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Agent Overview */}
+              <AgentOverview data={DASHBOARD_DATA} />
+
+              {/* Website Counter */}
+              <WebsiteCounter websites={websites} />
+
+              {/* System Status */}
+              <SystemStatus system={system} />
+
+              {/* Phase Tracker */}
+              <PhaseTracker phases={phases} currentPhase={currentPhase} />
+
+              {/* Content Stats */}
+              <ContentStats content={content} />
+
+              {/* Deliverables Feed */}
+              <DeliverablesFeed deliverables={deliverables} />
+
+              {/* Skills Matrix */}
+              <SkillsMatrix skills={skills} />
+            </div>
+
+            {/* Footer */}
+            <footer className="border-t border-stone-800 pt-4 pb-6 text-center">
+              <p className="text-xs text-stone-600 font-mono">
+                OPERATION VINEYARD v{meta.version} | Central Command Dashboard | Built by Agent Swarm
+              </p>
+              <p className="text-xs text-stone-700 mt-1">
+                Last updated: {new Date(meta.lastUpdated).toLocaleString()}
+              </p>
+            </footer>
+          </main>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Dashboard />);
+  </script>
+</body>
+</html>
